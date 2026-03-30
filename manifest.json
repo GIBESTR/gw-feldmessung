@@ -1,0 +1,26 @@
+{
+  "name": "GW-Feldmessung",
+  "short_name": "GW-Messung",
+  "description": "Grundwasser Feldmessungen erfassen – offline-fähig",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a1a14",
+  "theme_color": "#0a3d2e",
+  "orientation": "portrait-primary",
+  "lang": "de-CH",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"]
+}

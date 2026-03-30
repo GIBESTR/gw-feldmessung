@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GW-Messung">
+<meta name="theme-color" content="#0a3d2e">
+<title>Grundwasser Feldmessung</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg: #0a1a14;
+    --bg2: #0f2419;
+    --bg3: #142e1e;
+    --surface: #1a3828;
+    --surface2: #204530;
+    --border: #2d6045;
+    --accent: #3ddc84;
+    --accent2: #00b4d8;
+    --accent3: #f4a261;
+    --text: #e8f5ef;
+    --text2: #9dc4b0;
+    --text3: #5a8a72;
+    --danger: #e63946;
+    --warn: #f4a261;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --radius: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 10px; }
+
+  .logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .app-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+  }
+
+  .app-sub {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+
+  .header-actions { display: flex; gap: 8px; }
+
+  .icon-btn {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .icon-btn:hover, .icon-btn:active { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
+
+  /* PROJECT BAR */
+  #project-bar {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  #project-bar label { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+  #project-select {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .offline-badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  .offline-badge.online { border-color: var(--accent); color: var(--accent); }
+
+  /* NAV TABS */
+  nav {
+    display: flex;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    order: 999;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px 4px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    transition: color 0.15s;
+    position: relative;
+  }
+
+  .tab-btn .tab-icon { font-size: 20px; }
+
+  .tab-btn.active {
+    color: var(--accent);
+  }
+
+  .tab-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 0 0 2px 2px;
+  }
+
+  /* MAIN CONTENT */
+  main {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .view {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    display: none;
+    padding: 16px;
+  }
+  .view.active { display: block; }
+  #view-karte.active { display: flex; flex-direction: column; padding: 0; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* MESSSTELLEN LIST */
+  .messstelle-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .ms-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ms-card:hover, .ms-card:active { border-color: var(--accent); background: var(--surface2); }
+
+  .ms-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--bg3);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .ms-icon.has-new { border-color: var(--accent); }
+
+  .ms-info { flex: 1; min-width: 0; }
+  .ms-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ms-meta { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+
+  .ms-badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* MESSUNG FORM */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .form-row { margin-bottom: 14px; }
+  .form-row:last-child { margin-bottom: 0; }
+
+  .form-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+  }
+
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 14px;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .form-textarea { min-height: 80px; resize: vertical; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .toggle-label { font-size: 14px; }
+
+  .toggle {
+    position: relative;
+    width: 48px; height: 26px;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--bg3);
+    border-radius: 13px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 3px; top: 3px;
+    background: var(--text3);
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(22px); background: var(--bg); }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+
+  /* STATS BAR */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  /* VERLAUF */
+  .messung-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  .messung-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+
+  .messung-date {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .messung-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .messung-new { border-color: var(--accent2); }
+  .messung-new::before {
+    content: 'NEU';
+    position: absolute;
+    top: 8px; right: 8px;
+    font-size: 9px;
+    font-family: var(--mono);
+    background: var(--accent2);
+    color: var(--bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .messung-bemerkung { font-size: 12px; color: var(--text3); margin-top: 4px; font-style: italic; }
+
+  /* MAP */
+  #map { flex: 1; }
+  .map-info-bar {
+    padding: 8px 16px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    flex-shrink: 0;
+  }
+
+  /* DATA SCREEN */
+  .data-action-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .data-action-row .btn { flex: 1; padding: 12px; font-size: 13px; }
+
+  .data-info {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-top: 12px;
+  }
+
+  .data-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .data-info-row:last-child { border-bottom: none; }
+  .data-info-row span:first-child { color: var(--text3); font-family: var(--mono); font-size: 11px; }
+  .data-info-row span:last-child { font-weight: 500; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: 20px 16px 32px;
+    width: 100%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+
+  .modal-title {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  /* MS DETAIL */
+  .ms-detail-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+
+  .ms-detail-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .ms-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .ms-detail-item { font-size: 12px; }
+  .ms-detail-item span:first-child { color: var(--text3); font-family: var(--mono); font-size: 10px; display: block; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent);
+    color: var(--bg);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--mono);
+    z-index: 300;
+    opacity: 0;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--danger); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text3);
+  }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; line-height: 1.6; }
+
+  /* SEARCH */
+  .search-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px 10px 36px;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 14px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .search-wrap { position: relative; margin-bottom: 12px; }
+  .search-wrap::before {
+    content: '🔍';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    z-index: 1;
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+
+  .btn-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .btn-row .btn { flex: 1; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo">💧</div>
+    <div>
+      <div class="app-title">GW-FELDMESSUNG</div>
+      <div class="app-sub">Grundwasser Monitoring</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="showView('view-daten')" title="Import/Export">⇅</button>
+  </div>
+</header>
+
+<div id="project-bar">
+  <label>PROJEKT</label>
+  <select id="project-select" onchange="onProjectChange()">
+    <option value="">— kein Projekt geladen —</option>
+  </select>
+  <div class="offline-badge" id="online-badge">⬤ offline</div>
+</div>
+
+<main>
+  <!-- MESSSTELLEN VIEW -->
+  <div class="view active" id="view-messstellen">
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-val" id="stat-total">0</div><div class="stat-label">Messstellen</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-today">0</div><div class="stat-label">Heute gemessen</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-pending">0</div><div class="stat-label">Ausstehend</div></div>
+    </div>
+    <div class="search-wrap">
+      <input type="search" class="search-input" id="search-ms" placeholder="Messstelle suchen…" oninput="filterMessstellen()">
+    </div>
+    <div class="section-title">MESSSTELLEN</div>
+    <div class="messstelle-list" id="ms-list">
+      <div class="empty-state">
+        <div class="empty-icon">📂</div>
+        <p>Kein Projekt geladen.<br>Bitte unter <strong>Daten</strong> ein Projekt importieren.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- KARTE VIEW -->
+  <div class="view" id="view-karte">
+    <div id="map"></div>
+    <div class="map-info-bar" id="map-info">Karte wird geladen…</div>
+  </div>
+
+  <!-- VERLAUF VIEW -->
+  <div class="view" id="view-verlauf">
+    <div class="section-title">ALLE MESSUNGEN (NEUE ZUERST)</div>
+    <div id="verlauf-list">
+      <div class="empty-state"><div class="empty-icon">📋</div><p>Noch keine Messungen erfasst.</p></div>
+    </div>
+  </div>
+
+  <!-- DATEN VIEW -->
+  <div class="view" id="view-daten">
+    <div class="section-title">DATENAUSTAUSCH</div>
+
+    <div class="form-card">
+      <div class="form-row">
+        <label class="form-label">IMPORT (JSON vom PC)</label>
+        <input type="file" accept=".json" id="import-file" style="display:none" onchange="importData(event)">
+        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📁  Projektdatei öffnen…</button>
+      </div>
+    </div>
+
+    <div class="form-card" style="margin-top:12px">
+      <div class="form-row">
+        <label class="form-label">EXPORT (JSON für PC)</label>
+        <button class="btn btn-primary" onclick="exportData()">⬇  Messungen exportieren</button>
+      </div>
+      <div class="form-row" style="margin-top:8px">
+        <label class="form-label">EXPORT (CSV)</label>
+        <button class="btn btn-secondary" onclick="exportCSV()">⬇  Als CSV exportieren</button>
+      </div>
+    </div>
+
+    <div class="data-info" id="data-info">
+      <div class="data-info-row"><span>PROJEKT</span><span id="info-projekt">—</span></div>
+      <div class="data-info-row"><span>MESSSTELLEN</span><span id="info-ms">0</span></div>
+      <div class="data-info-row"><span>MESSUNGEN GESAMT</span><span id="info-total">0</span></div>
+      <div class="data-info-row"><span>NEUE MESSUNGEN</span><span id="info-new">0</span></div>
+      <div class="data-info-row"><span>LETZTE ÄNDERUNG</span><span id="info-date">—</span></div>
+    </div>
+
+    <div style="margin-top:16px">
+      <button class="btn btn-danger" onclick="clearData()">🗑  Alle Daten löschen</button>
+    </div>
+  </div>
+</main>
+
+<nav>
+  <button class="tab-btn active" onclick="showView('view-messstellen')" data-view="view-messstellen">
+    <span class="tab-icon">📍</span>Messstellen
+  </button>
+  <button class="tab-btn" onclick="showView('view-karte')" data-view="view-karte">
+    <span class="tab-icon">🗺</span>Karte
+  </button>
+  <button class="tab-btn" onclick="showView('view-verlauf')" data-view="view-verlauf">
+    <span class="tab-icon">📋</span>Verlauf
+  </button>
+  <button class="tab-btn" onclick="showView('view-daten')" data-view="view-daten">
+    <span class="tab-icon">⇅</span>Daten
+  </button>
+</nav>
+
+<!-- MESSUNG MODAL -->
+<div class="modal-overlay" id="messung-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-ms-name">Messung erfassen</div>
+
+    <div class="ms-detail-header" id="modal-ms-detail"></div>
+
+    <div class="form-card">
+      <div class="form-row">
+        <label class="form-label">DATUM / UHRZEIT</label>
+        <input type="datetime-local" class="form-input" id="input-datetime">
+      </div>
+      <div class="form-row">
+        <label class="form-label">ABSTICH [m]</label>
+        <input type="number" step="0.001" placeholder="z.B. 3.456" class="form-input" id="input-abstich">
+      </div>
+      <div class="form-row">
+        <label class="form-label">MESSBAR</label>
+        <div class="toggle-row">
+          <span class="toggle-label">Grundwasser messbar</span>
+          <label class="toggle">
+            <input type="checkbox" id="input-messbar" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">BEMERKUNG</label>
+        <textarea class="form-textarea" id="input-bemerkung" placeholder="Optionale Bemerkung…"></textarea>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:8px">BISHERIGE MESSUNGEN</div>
+    <div id="modal-verlauf" style="margin-bottom:16px"></div>
+
+    <button class="btn btn-primary" onclick="saveMessung()">💾  Messung speichern</button>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="closeModalDirect()">Abbrechen</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  projekte: [],      // [{id, name, messstellen:[...]}]
+  messungen: [],     // [{id, messstellen_id, projekt_id, datum, abstich, messbar, bemerkung, neu:true}]
+  aktivProjekt: null
+};
+
+let map = null;
+let mapMarkers = [];
+let currentMsId = null;
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  updateOnlineBadge();
+  window.addEventListener('online', updateOnlineBadge);
+  window.addEventListener('offline', updateOnlineBadge);
+
+  // Set default datetime
+  setNow();
+});
+
+function setNow() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString().slice(0, 16);
+  document.getElementById('input-datetime').value = local;
+}
+
+function updateOnlineBadge() {
+  const el = document.getElementById('online-badge');
+  if (navigator.onLine) {
+    el.textContent = '⬤ online';
+    el.classList.add('online');
+  } else {
+    el.textContent = '⬤ offline';
+    el.classList.remove('online');
+  }
+}
+
+// ============================================================
+// STORAGE
+// ============================================================
+function saveToStorage() {
+  try {
+    localStorage.setItem('gw_state', JSON.stringify(state));
+  } catch(e) { showToast('Speicher voll!', true); }
+}
+
+function loadFromStorage() {
+  const raw = localStorage.getItem('gw_state');
+  if (raw) {
+    try {
+      state = JSON.parse(raw);
+    } catch(e) {}
+  }
+  renderProjektSelect();
+  renderMessstellen();
+  renderVerlauf();
+  updateDataInfo();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === id);
+  });
+  document.getElementById(id).classList.add('active');
+  if (id === 'view-karte') initMap();
+}
+
+// ============================================================
+// PROJEKT
+// ============================================================
+function renderProjektSelect() {
+  const sel = document.getElementById('project-select');
+  sel.innerHTML = '<option value="">— kein Projekt —</option>';
+  state.projekte.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    if (state.aktivProjekt === p.id) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function onProjectChange() {
+  const val = document.getElementById('project-select').value;
+  state.aktivProjekt = val || null;
+  saveToStorage();
+  renderMessstellen();
+  updateDataInfo();
+  if (map) renderMapMarkers();
+}
+
+// ============================================================
+// MESSSTELLEN
+// ============================================================
+function getAktiveProjekt() {
+  return state.projekte.find(p => p.id === state.aktivProjekt) || null;
+}
+
+function renderMessstellen() {
+  const list = document.getElementById('ms-list');
+  const proj = getAktiveProjekt();
+  const filter = document.getElementById('search-ms')?.value?.toLowerCase() || '';
+
+  if (!proj) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><p>Kein Projekt geladen.<br>Bitte unter <strong>Daten</strong> ein Projekt importieren.</p></div>`;
+    updateStats(0, 0, 0);
+    return;
+  }
+
+  let ms = proj.messstellen || [];
+  if (filter) ms = ms.filter(m => m.name.toLowerCase().includes(filter) || (m.id+'').includes(filter));
+
+  const heute = new Date().toISOString().slice(0, 10);
+  let heuteCount = 0;
+
+  list.innerHTML = '';
+  ms.forEach(m => {
+    const myMessungen = state.messungen.filter(x => x.messstellen_id === m.id && x.projekt_id === proj.id);
+    const neueHeute = myMessungen.filter(x => x.neu && x.datum.startsWith(heute));
+    const hasNew = myMessungen.some(x => x.neu);
+    if (neueHeute.length > 0) heuteCount++;
+
+    const card = document.createElement('div');
+    card.className = 'ms-card';
+    card.onclick = () => openMessungModal(m.id);
+
+    const letzte = myMessungen.length ? myMessungen.sort((a,b) => b.datum.localeCompare(a.datum))[0] : null;
+
+    card.innerHTML = `
+      <div class="ms-icon ${hasNew ? 'has-new' : ''}">💧</div>
+      <div class="ms-info">
+        <div class="ms-name">${m.name}</div>
+        <div class="ms-meta">${m.id} · OK ${m.ok_rohr != null ? m.ok_rohr.toFixed(2)+' m' : '—'} · Ü ${m.ueberstand != null ? m.ueberstand.toFixed(2)+' m' : '—'}${letzte ? ' · Letzter Abstich: '+letzte.abstich+' m' : ''}</div>
+      </div>
+      ${hasNew ? `<div class="ms-badge">${myMessungen.filter(x=>x.neu).length}</div>` : ''}
+    `;
+    list.appendChild(card);
+  });
+
+  if (ms.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>Keine Messstellen gefunden.</p></div>`;
+  }
+
+  const ausstehend = (proj.messstellen || []).filter(m => {
+    return !state.messungen.some(x => x.messstellen_id === m.id && x.projekt_id === proj.id && x.datum.startsWith(heute));
+  }).length;
+
+  updateStats(proj.messstellen?.length || 0, heuteCount, ausstehend);
+}
+
+function filterMessstellen() { renderMessstellen(); }
+
+function updateStats(total, heute, ausstehend) {
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-today').textContent = heute;
+  document.getElementById('stat-pending').textContent = ausstehend;
+}
+
+// ============================================================
+// MESSUNG MODAL
+// ============================================================
+function openMessungModal(msId) {
+  currentMsId = msId;
+  const proj = getAktiveProjekt();
+  if (!proj) return;
+  const ms = proj.messstellen.find(m => m.id === msId);
+  if (!ms) return;
+
+  document.getElementById('modal-ms-name').textContent = ms.name;
+
+  // Detail header
+  document.getElementById('modal-ms-detail').innerHTML = `
+    <div class="ms-detail-name">${ms.name}</div>
+    <div class="ms-detail-grid">
+      <div class="ms-detail-item"><span>ID</span>${ms.id}</div>
+      <div class="ms-detail-item"><span>OK Rohr</span>${ms.ok_rohr != null ? ms.ok_rohr.toFixed(3)+' m ü.M.' : '—'}</div>
+      <div class="ms-detail-item"><span>Überstand</span>${ms.ueberstand != null ? ms.ueberstand.toFixed(3)+' m' : '—'}</div>
+      <div class="ms-detail-item"><span>Koordinaten</span>${ms.lat && ms.lng ? ms.lat.toFixed(5)+' / '+ms.lng.toFixed(5) : '—'}</div>
+    </div>
+  `;
+
+  // Verlauf
+  const myMessungen = state.messungen
+    .filter(x => x.messstellen_id === msId && x.projekt_id === proj.id)
+    .sort((a,b) => b.datum.localeCompare(a.datum));
+
+  const verlaufEl = document.getElementById('modal-verlauf');
+  if (myMessungen.length === 0) {
+    verlaufEl.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Noch keine Messungen vorhanden.</div>';
+  } else {
+    verlaufEl.innerHTML = myMessungen.slice(0, 10).map(m => `
+      <div class="messung-item ${m.neu ? 'messung-new' : ''}">
+        <div class="messung-header">
+          <div class="messung-date">${formatDt(m.datum)}</div>
+          <div class="messung-val">${m.messbar ? m.abstich+' m' : '—'}</div>
+        </div>
+        ${!m.messbar ? '<div style="font-size:12px;color:var(--warn)">nicht messbar</div>' : ''}
+        ${m.bemerkung ? `<div class="messung-bemerkung">${m.bemerkung}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  setNow();
+  document.getElementById('input-abstich').value = '';
+  document.getElementById('input-messbar').checked = true;
+  document.getElementById('input-bemerkung').value = '';
+
+  document.getElementById('messung-modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('messung-modal')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('messung-modal').classList.remove('open');
+}
+
+function saveMessung() {
+  const proj = getAktiveProjekt();
+  if (!proj || !currentMsId) return;
+
+  const dt = document.getElementById('input-datetime').value;
+  const abstich = document.getElementById('input-abstich').value;
+  const messbar = document.getElementById('input-messbar').checked;
+  const bemerkung = document.getElementById('input-bemerkung').value.trim();
+
+  if (!dt) { showToast('Datum/Uhrzeit fehlt!', true); return; }
+  if (messbar && abstich === '') { showToast('Abstich fehlt!', true); return; }
+
+  const m = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    messstellen_id: currentMsId,
+    projekt_id: proj.id,
+    datum: dt,
+    abstich: messbar ? parseFloat(abstich) : null,
+    messbar: messbar,
+    bemerkung: bemerkung,
+    neu: true,
+    erfasst_am: new Date().toISOString()
+  };
+
+  state.messungen.push(m);
+  saveToStorage();
+  closeModalDirect();
+  renderMessstellen();
+  renderVerlauf();
+  updateDataInfo();
+  showToast('Messung gespeichert ✓');
+}
+
+// ============================================================
+// VERLAUF
+// ============================================================
+function renderVerlauf() {
+  const el = document.getElementById('verlauf-list');
+  const proj = getAktiveProjekt();
+
+  let messungen = state.messungen;
+  if (proj) messungen = messungen.filter(m => m.projekt_id === proj.id);
+  messungen = [...messungen].sort((a,b) => b.datum.localeCompare(a.datum));
+
+  if (messungen.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Noch keine Messungen erfasst.</p></div>';
+    return;
+  }
+
+  el.innerHTML = messungen.map(m => {
+    const msName = getMsName(m.messstellen_id, m.projekt_id);
+    return `
+      <div class="messung-item ${m.neu ? 'messung-new' : ''}">
+        <div class="messung-header">
+          <div>
+            <div style="font-weight:500;font-size:13px">${msName}</div>
+            <div class="messung-date">${formatDt(m.datum)}</div>
+          </div>
+          <div class="messung-val">${m.messbar ? m.abstich+' m' : '—'}</div>
+        </div>
+        ${!m.messbar ? '<div style="font-size:12px;color:var(--warn)">nicht messbar</div>' : ''}
+        ${m.bemerkung ? `<div class="messung-bemerkung">${m.bemerkung}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function getMsName(msId, projId) {
+  const proj = state.projekte.find(p => p.id === projId);
+  if (!proj) return msId;
+  const ms = proj.messstellen?.find(m => m.id === msId);
+  return ms ? ms.name : msId;
+}
+
+// ============================================================
+// KARTE
+// ============================================================
+function initMap() {
+  if (map) { renderMapMarkers(); return; }
+
+  map = L.map('map', { zoomControl: true }).setView([46.95, 7.45], 10);
+
+  // Swisstopo WMTS
+  L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {
+    attribution: '© swisstopo',
+    maxZoom: 18,
+    minZoom: 6
+  }).addTo(map);
+
+  renderMapMarkers();
+}
+
+function renderMapMarkers() {
+  mapMarkers.forEach(m => m.remove());
+  mapMarkers = [];
+
+  const proj = getAktiveProjekt();
+  if (!proj) {
+    document.getElementById('map-info').textContent = 'Kein Projekt geladen.';
+    return;
+  }
+
+  const ms = (proj.messstellen || []).filter(m => m.lat && m.lng);
+  document.getElementById('map-info').textContent = `${ms.length} Messstellen mit Koordinaten`;
+
+  if (ms.length === 0) return;
+
+  const bounds = [];
+
+  ms.forEach(m => {
+    const heute = new Date().toISOString().slice(0, 10);
+    const hatHeute = state.messungen.some(x => x.messstellen_id === m.id && x.datum.startsWith(heute));
+    const hatNeu = state.messungen.some(x => x.messstellen_id === m.id && x.neu);
+
+    const color = hatHeute ? '#3ddc84' : hatNeu ? '#00b4d8' : '#5a8a72';
+    const icon = L.divIcon({
+      html: `<div style="width:20px;height:20px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>`,
+      className: '',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+    });
+
+    const marker = L.marker([m.lat, m.lng], { icon })
+      .addTo(map)
+      .bindPopup(`<b>${m.name}</b><br>OK Rohr: ${m.ok_rohr != null ? m.ok_rohr.toFixed(3)+' m' : '—'}<br><button onclick="window.openMessungModalFromMap('${m.id}')" style="margin-top:6px;padding:4px 10px;background:#3ddc84;border:none;border-radius:4px;cursor:pointer;font-weight:600">Messen</button>`);
+
+    mapMarkers.push(marker);
+    bounds.push([m.lat, m.lng]);
+  });
+
+  if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
+}
+
+window.openMessungModalFromMap = function(msId) {
+  document.querySelectorAll('.leaflet-popup-close-button').forEach(b => b.click());
+  showView('view-messstellen');
+  setTimeout(() => openMessungModal(msId), 300);
+};
+
+// ============================================================
+// IMPORT / EXPORT
+// ============================================================
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      // Accept project format
+      if (data.projekt) {
+        const proj = data.projekt;
+        if (!proj.id) proj.id = 'proj_' + Date.now();
+
+        // Remove existing project with same id
+        state.projekte = state.projekte.filter(p => p.id !== proj.id);
+        state.projekte.push(proj);
+        state.aktivProjekt = proj.id;
+
+        // Import historical messungen if present (not flagged as new)
+        if (data.messungen) {
+          const existing = new Set(state.messungen.map(m => m.id));
+          data.messungen.forEach(m => {
+            if (!existing.has(m.id)) {
+              m.neu = false;
+              state.messungen.push(m);
+            }
+          });
+        }
+
+        saveToStorage();
+        renderProjektSelect();
+        renderMessstellen();
+        renderVerlauf();
+        updateDataInfo();
+        showToast(`Projekt "${proj.name}" importiert ✓`);
+      } else {
+        showToast('Ungültiges Format!', true);
+      }
+    } catch(e) {
+      showToast('Fehler beim Lesen der Datei!', true);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function exportData() {
+  const proj = getAktiveProjekt();
+  if (!proj) { showToast('Kein Projekt aktiv!', true); return; }
+
+  const neueMessungen = state.messungen.filter(m => m.projekt_id === proj.id && m.neu);
+
+  const exportObj = {
+    export_datum: new Date().toISOString(),
+    projekt: proj,
+    messungen: state.messungen.filter(m => m.projekt_id === proj.id)
+  };
+
+  downloadJSON(exportObj, `GW_${proj.name.replace(/\s+/g,'_')}_${today()}.json`);
+
+  // Mark as exported (not new)
+  neueMessungen.forEach(m => m.neu = false);
+  saveToStorage();
+  renderMessstellen();
+  renderVerlauf();
+  updateDataInfo();
+  showToast(`${neueMessungen.length} neue Messungen exportiert`);
+}
+
+function exportCSV() {
+  const proj = getAktiveProjekt();
+  if (!proj) { showToast('Kein Projekt aktiv!', true); return; }
+
+  const rows = [['Messstelle_ID', 'Messstelle_Name', 'Datum', 'Abstich_m', 'Messbar', 'Bemerkung', 'Neu']];
+
+  state.messungen
+    .filter(m => m.projekt_id === proj.id)
+    .sort((a,b) => a.datum.localeCompare(b.datum))
+    .forEach(m => {
+      const ms = proj.messstellen?.find(s => s.id === m.messstellen_id);
+      rows.push([
+        m.messstellen_id,
+        ms?.name || '',
+        m.datum,
+        m.abstich ?? '',
+        m.messbar ? 'Ja' : 'Nein',
+        m.bemerkung || '',
+        m.neu ? 'Ja' : 'Nein'
+      ]);
+    });
+
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `GW_${proj.name.replace(/\s+/g,'_')}_${today()}.csv`;
+  a.click();
+  showToast('CSV exportiert ✓');
+}
+
+function downloadJSON(obj, filename) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+}
+
+function clearData() {
+  if (!confirm('Alle lokalen Daten löschen? (Bitte vorher exportieren!)')) return;
+  state = { projekte: [], messungen: [], aktivProjekt: null };
+  saveToStorage();
+  renderProjektSelect();
+  renderMessstellen();
+  renderVerlauf();
+  updateDataInfo();
+  showToast('Daten gelöscht');
+}
+
+// ============================================================
+// DATA INFO
+// ============================================================
+function updateDataInfo() {
+  const proj = getAktiveProjekt();
+  document.getElementById('info-projekt').textContent = proj?.name || '—';
+  document.getElementById('info-ms').textContent = proj?.messstellen?.length || 0;
+  const allM = state.messungen.filter(m => !proj || m.projekt_id === proj.id);
+  const neueM = allM.filter(m => m.neu);
+  document.getElementById('info-total').textContent = allM.length;
+  document.getElementById('info-new').textContent = neueM.length;
+  document.getElementById('info-date').textContent = neueM.length > 0
+    ? formatDt([...neueM].sort((a,b) => b.erfasst_am.localeCompare(a.erfasst_am))[0].erfasst_am)
+    : '—';
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function formatDt(dt) {
+  if (!dt) return '—';
+  try {
+    const d = new Date(dt);
+    return d.toLocaleDateString('de-CH') + ' ' + d.toLocaleTimeString('de-CH', {hour:'2-digit',minute:'2-digit'});
+  } catch { return dt; }
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function showToast(msg, error = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (error ? ' error' : '') + ' show';
+  setTimeout(() => { t.classList.remove('show'); }, 2500);
+}
+
+// ============================================================
+// SERVICE WORKER REGISTRATION
+// ============================================================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

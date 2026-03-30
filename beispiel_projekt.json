@@ -1,0 +1,85 @@
+{
+  "projekt": {
+    "id": "proj_2025_giessen",
+    "name": "Giessen Grundwassernetz 2025",
+    "beschreibung": "Monitoring Grundwasser Kanton Bern, Kampagne 2025",
+    "erstellt": "2025-01-01",
+    "messstellen": [
+      {
+        "id": "GW-001",
+        "name": "Messstelle Aarberg Nord",
+        "ok_rohr": 481.350,
+        "ueberstand": 0.215,
+        "lat": 47.0523,
+        "lng": 7.2701
+      },
+      {
+        "id": "GW-002",
+        "name": "Messstelle Lyss Ost",
+        "ok_rohr": 465.120,
+        "ueberstand": 0.180,
+        "lat": 47.0715,
+        "lng": 7.3092
+      },
+      {
+        "id": "GW-003",
+        "name": "Messstelle Busswil",
+        "ok_rohr": 472.880,
+        "ueberstand": 0.250,
+        "lat": 47.0601,
+        "lng": 7.2445
+      },
+      {
+        "id": "GW-004",
+        "name": "Messstelle Kappelen",
+        "ok_rohr": 469.540,
+        "ueberstand": 0.190,
+        "lat": 47.0390,
+        "lng": 7.2880
+      },
+      {
+        "id": "GW-005",
+        "name": "Messstelle Radelfingen",
+        "ok_rohr": 475.220,
+        "ueberstand": 0.300,
+        "lat": 47.0180,
+        "lng": 7.2650
+      }
+    ]
+  },
+  "messungen": [
+    {
+      "id": "hist_001",
+      "messstellen_id": "GW-001",
+      "projekt_id": "proj_2025_giessen",
+      "datum": "2025-03-15T09:30",
+      "abstich": 4.235,
+      "messbar": true,
+      "bemerkung": "",
+      "neu": false,
+      "erfasst_am": "2025-03-15T09:31:00Z"
+    },
+    {
+      "id": "hist_002",
+      "messstellen_id": "GW-002",
+      "projekt_id": "proj_2025_giessen",
+      "datum": "2025-03-15T10:15",
+      "abstich": 3.870,
+      "messbar": true,
+      "bemerkung": "Wasser leicht trüb",
+      "neu": false,
+      "erfasst_am": "2025-03-15T10:16:00Z"
+    },
+    {
+      "id": "hist_003",
+      "messstellen_id": "GW-003",
+      "projekt_id": "proj_2025_giessen",
+      "datum": "2025-03-15T11:00",
+      "abstich": null,
+      "messbar": false,
+      "bemerkung": "Rohr verstopft, nächste Messung nach Reinigung",
+      "neu": false,
+      "erfasst_am": "2025-03-15T11:02:00Z"
+    }
+  ]
+}
