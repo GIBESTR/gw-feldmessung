@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GW-Messung">
-<meta name="theme-color" content="#515759">
+<meta name="theme-color" content="#0d4f5c">
 <title>Grundwasser Feldmessung</title>
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,26 +15,28 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
-    --bg: #f8f8f8;
+    --bg: #f0f6f8;
     --bg2: #ffffff;
-    --bg3: #eeeeee;
+    --bg3: #e2eef2;
     --surface: #ffffff;
-    --surface2: #f0f0f0;
-    --border: #d0d0d0;
-    --accent: #515759;
-    --accent2: #5D686E;
-    --accent3: #888;
-    --header-bg: #515759;
-    --nav-bg: #515759;
-    --text: #000000;
-    --text2: #5D686E;
-    --text3: #969696;
-    --danger: #b00;
-    --warn: #515759;
+    --surface2: #e8f3f7;
+    --border: #b8d4dc;
+    --accent: #0d4f5c;
+    --accent-mid: #1a7a8f;
+    --accent2: #00b4cc;
+    --accent3: #5a9aaa;
+    --header-bg: #0d4f5c;
+    --nav-bg: #0d4f5c;
+    --text: #0a2e35;
+    --text2: #1a5a6a;
+    --text3: #6a9aaa;
+    --danger: #c0392b;
+    --warn: #e67e22;
+    --success: #00b4cc;
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans', sans-serif;
-    --radius: 2px;
-    --shadow: 0 1px 6px rgba(0,0,0,0.10);
+    --radius: 3px;
+    --shadow: 0 2px 10px rgba(13,79,92,0.12);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -51,8 +53,8 @@
 
   /* HEADER */
   header {
-    background: var(--header-bg);
-    border-bottom: none;
+    background: linear-gradient(135deg, #0d4f5c 0%, #1a7a8f 100%);
+    border-bottom: 3px solid var(--accent2);
     padding: 0 16px;
     height: 56px;
     display: flex;
@@ -67,10 +69,11 @@
 
   .logo {
     width: 32px; height: 32px;
-    background: var(--accent);
-    border-radius: 4px;
+    background: var(--accent2);
+    border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
     font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0,180,204,0.4);
   }
 
   .app-title {
@@ -105,8 +108,8 @@
 
   /* PROJECT BAR */
   #project-bar {
-    background: var(--bg3);
-    border-bottom: 2px solid #515759;
+    background: linear-gradient(180deg, #e2eef2 0%, #f0f6f8 100%);
+    border-bottom: 2px solid var(--accent2);
     padding: 8px 16px;
     display: flex;
     align-items: center;
@@ -114,12 +117,12 @@
     flex-shrink: 0;
   }
 
-  #project-bar label { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+  #project-bar label { font-size: 11px; color: var(--text3); font-family: var(--mono); flex-shrink: 0; }
 
   #project-select {
     flex: 1;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     color: var(--text);
     padding: 6px 10px;
     border-radius: var(--radius);
@@ -127,6 +130,22 @@
     font-size: 13px;
     cursor: pointer;
   }
+  #project-select:focus { outline: none; border-color: var(--accent2); }
+
+  /* Manage button in project bar */
+  #btn-manage-project {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    color: var(--text3);
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  #btn-manage-project:hover, #btn-manage-project:active { border-color: var(--accent); color: var(--accent); }
 
   .offline-badge {
     font-size: 10px;
@@ -134,11 +153,11 @@
     padding: 3px 8px;
     border-radius: 12px;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     color: var(--text3);
     white-space: nowrap;
   }
-  .offline-badge.online { border-color: var(--accent); color: var(--accent); }
+  .offline-badge.online { border-color: var(--accent2); color: var(--accent2); background: #e0f9fd; }
 
   /* NAV TABS */
   nav {
@@ -169,16 +188,14 @@
 
   .tab-btn .tab-icon { font-size: 20px; }
 
-  .tab-btn.active {
-    color: #ffffff;
-  }
+  .tab-btn.active { color: #ffffff; }
 
   .tab-btn.active::before {
     content: '';
     position: absolute;
     top: 0; left: 20%; right: 20%;
     height: 3px;
-    background: var(--accent);
+    background: var(--accent2);
     border-radius: 0 0 2px 2px;
   }
 
@@ -225,7 +242,7 @@
     align-items: center;
     gap: 12px;
   }
-  .ms-card:hover, .ms-card:active { border-color: var(--accent); background: var(--surface2); }
+  .ms-card:hover, .ms-card:active { border-color: var(--accent2); background: var(--surface2); }
 
   .ms-icon {
     width: 40px; height: 40px;
@@ -236,9 +253,7 @@
     font-size: 18px;
     flex-shrink: 0;
   }
-  .ms-icon.has-new { border-color: var(--accent); }
-
-  /* VERLAUF */
+  .ms-icon.has-new { border-color: var(--accent2); background: #e0f9fd; }
 
   .ms-info { flex: 1; min-width: 0; }
   .ms-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -249,10 +264,11 @@
     font-family: var(--mono);
     padding: 2px 7px;
     border-radius: 10px;
-    background: var(--accent);
-    color: var(--bg);
-    font-weight: 600;
+    background: var(--accent2);
+    color: #fff;
+    font-weight: 700;
     flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0,180,204,0.35);
   }
 
   /* MESSUNG FORM */
@@ -289,7 +305,8 @@
   }
   .form-input:focus, .form-textarea:focus, .form-select:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(0,180,204,0.12);
   }
 
   .form-textarea { min-height: 80px; resize: vertical; }
@@ -329,8 +346,8 @@
     border-radius: 50%;
     transition: 0.2s;
   }
-  .toggle input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(22px); background: var(--bg); }
+  .toggle input:checked + .toggle-slider { background: var(--accent2); border-color: var(--accent2); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(22px); background: #fff; }
 
   /* BUTTONS */
   .btn {
@@ -345,8 +362,8 @@
     transition: all 0.15s;
     letter-spacing: 0.02em;
   }
-  .btn-primary { background: #515759; color: #fff; }
-  .btn-primary:hover { background: #3e4446; }
+  .btn-primary { background: linear-gradient(135deg, #0d4f5c 0%, #1a7a8f 100%); color: #fff; box-shadow: 0 2px 8px rgba(13,79,92,0.25); }
+  .btn-primary:hover { background: linear-gradient(135deg, #0a3d47 0%, #156575 100%); }
   .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
   .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
 
@@ -370,11 +387,13 @@
     font-family: var(--mono);
     font-size: 22px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent2);
     line-height: 1;
   }
 
   .stat-label { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  /* VERLAUF */
   .messung-item {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -401,10 +420,10 @@
     font-family: var(--mono);
     font-size: 18px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent2);
   }
 
-  .messung-new { border-color: var(--accent2); }
+  .messung-new { border-color: var(--accent2); border-left: 3px solid var(--accent2); }
   .messung-new::before {
     content: 'NEU';
     position: absolute;
@@ -412,10 +431,10 @@
     font-size: 9px;
     font-family: var(--mono);
     background: var(--accent2);
-    color: var(--bg);
+    color: #fff;
     padding: 1px 5px;
     border-radius: 4px;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .messung-bemerkung { font-size: 12px; color: var(--text3); margin-top: 4px; font-style: italic; }
@@ -526,6 +545,40 @@
   .ms-detail-item { font-size: 12px; }
   .ms-detail-item span:first-child { color: var(--text3); font-family: var(--mono); font-size: 10px; display: block; }
 
+  /* PROJECT LIST in manage modal */
+  .projekt-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .projekt-item.active-proj { border-color: var(--accent); }
+
+  .projekt-item-info { flex: 1; min-width: 0; }
+  .projekt-item-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .projekt-item-meta { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+
+  .projekt-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .small-btn {
+    padding: 5px 10px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-family: var(--mono);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .small-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .small-btn.danger { border-color: var(--danger); color: var(--danger); background: transparent; }
+  .small-btn.danger:hover { background: #fff0f0; }
+
   /* TOAST */
   .toast {
     position: fixed;
@@ -533,7 +586,7 @@
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     background: var(--accent);
-    color: var(--bg);
+    color: #fff;
     padding: 10px 20px;
     border-radius: 20px;
     font-size: 13px;
@@ -610,6 +663,7 @@
   <select id="project-select" onchange="onProjectChange()">
     <option value="">— kein Projekt geladen —</option>
   </select>
+  <button id="btn-manage-project" onclick="openManageModal()" title="Projekte verwalten">⚙</button>
   <div class="offline-badge" id="online-badge">⬤ offline</div>
 </div>
 
@@ -740,6 +794,32 @@
   </div>
 </div>
 
+<!-- PROJEKTE VERWALTEN MODAL -->
+<div class="modal-overlay" id="manage-modal" onclick="closeManageModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">PROJEKTE VERWALTEN</div>
+    <div id="manage-projekt-list"></div>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="closeManageModalDirect()">Schliessen</button>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal-overlay" id="rename-modal" onclick="closeRenameModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">PROJEKT UMBENENNEN</div>
+    <div class="form-card">
+      <div class="form-row">
+        <label class="form-label">NEUER NAME</label>
+        <input type="text" class="form-input" id="input-rename" placeholder="Projektname…">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="confirmRename()">✓  Umbenennen</button>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="closeRenameModalDirect()">Abbrechen</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -747,14 +827,15 @@
 // STATE
 // ============================================================
 let state = {
-  projekte: [],      // [{id, name, messstellen:[...]}]
-  messungen: [],     // [{id, messstellen_id, projekt_id, datum, abstich, messbar, bemerkung, neu:true}]
+  projekte: [],
+  messungen: [],
   aktivProjekt: null
 };
 
 let map = null;
 let mapMarkers = [];
 let currentMsId = null;
+let renameProjektId = null;
 
 // ============================================================
 // INIT
@@ -764,8 +845,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateOnlineBadge();
   window.addEventListener('online', updateOnlineBadge);
   window.addEventListener('offline', updateOnlineBadge);
-
-  // Set default datetime
   setNow();
 });
 
@@ -799,9 +878,7 @@ function saveToStorage() {
 function loadFromStorage() {
   const raw = localStorage.getItem('gw_state');
   if (raw) {
-    try {
-      state = JSON.parse(raw);
-    } catch(e) {}
+    try { state = JSON.parse(raw); } catch(e) {}
   }
   renderProjektSelect();
   renderMessstellen();
@@ -830,7 +907,8 @@ function renderProjektSelect() {
   state.projekte.forEach(p => {
     const opt = document.createElement('option');
     opt.value = p.id;
-    opt.textContent = p.name;
+    const messCount = state.messungen.filter(m => m.projekt_id === p.id).length;
+    opt.textContent = `${p.name} (${p.messstellen?.length || 0} MS)`;
     if (state.aktivProjekt === p.id) opt.selected = true;
     sel.appendChild(opt);
   });
@@ -841,8 +919,118 @@ function onProjectChange() {
   state.aktivProjekt = val || null;
   saveToStorage();
   renderMessstellen();
+  renderVerlauf();
   updateDataInfo();
   if (map) renderMapMarkers();
+}
+
+// ============================================================
+// PROJEKTE VERWALTEN MODAL
+// ============================================================
+function openManageModal() {
+  renderManageProjektList();
+  document.getElementById('manage-modal').classList.add('open');
+}
+
+function closeManageModal(e) {
+  if (e.target === document.getElementById('manage-modal')) closeManageModalDirect();
+}
+
+function closeManageModalDirect() {
+  document.getElementById('manage-modal').classList.remove('open');
+}
+
+function renderManageProjektList() {
+  const el = document.getElementById('manage-projekt-list');
+  if (state.projekte.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📂</div><p>Keine Projekte geladen.</p></div>';
+    return;
+  }
+
+  el.innerHTML = state.projekte.map(p => {
+    const msCount = p.messstellen?.length || 0;
+    const messCount = state.messungen.filter(m => m.projekt_id === p.id).length;
+    const neueCount = state.messungen.filter(m => m.projekt_id === p.id && m.neu).length;
+    const isActive = state.aktivProjekt === p.id;
+    return `
+      <div class="projekt-item ${isActive ? 'active-proj' : ''}">
+        <div class="projekt-item-info">
+          <div class="projekt-item-name">${p.name}${isActive ? ' ✓' : ''}</div>
+          <div class="projekt-item-meta">${msCount} Messstellen · ${messCount} Messungen${neueCount > 0 ? ' · '+neueCount+' neu' : ''}</div>
+        </div>
+        <div class="projekt-item-actions">
+          ${!isActive ? `<button class="small-btn" onclick="activateProjekt('${p.id}')">Wählen</button>` : ''}
+          <button class="small-btn" onclick="startRename('${p.id}')">✏</button>
+          <button class="small-btn danger" onclick="deleteProjekt('${p.id}')">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function activateProjekt(id) {
+  state.aktivProjekt = id;
+  document.getElementById('project-select').value = id;
+  saveToStorage();
+  renderProjektSelect();
+  renderMessstellen();
+  renderVerlauf();
+  updateDataInfo();
+  if (map) renderMapMarkers();
+  renderManageProjektList();
+  showToast('Projekt aktiviert ✓');
+}
+
+function deleteProjekt(id) {
+  const proj = state.projekte.find(p => p.id === id);
+  if (!proj) return;
+  const messCount = state.messungen.filter(m => m.projekt_id === id).length;
+  const warn = messCount > 0 ? ` und ${messCount} Messungen` : '';
+  if (!confirm(`Projekt "${proj.name}"${warn} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
+
+  state.projekte = state.projekte.filter(p => p.id !== id);
+  state.messungen = state.messungen.filter(m => m.projekt_id !== id);
+  if (state.aktivProjekt === id) {
+    state.aktivProjekt = state.projekte.length > 0 ? state.projekte[0].id : null;
+  }
+  saveToStorage();
+  renderProjektSelect();
+  renderMessstellen();
+  renderVerlauf();
+  updateDataInfo();
+  if (map) renderMapMarkers();
+  renderManageProjektList();
+  showToast(`Projekt "${proj.name}" gelöscht`);
+}
+
+function startRename(id) {
+  renameProjektId = id;
+  const proj = state.projekte.find(p => p.id === id);
+  document.getElementById('input-rename').value = proj?.name || '';
+  document.getElementById('rename-modal').classList.add('open');
+}
+
+function closeRenameModal(e) {
+  if (e.target === document.getElementById('rename-modal')) closeRenameModalDirect();
+}
+
+function closeRenameModalDirect() {
+  document.getElementById('rename-modal').classList.remove('open');
+  renameProjektId = null;
+}
+
+function confirmRename() {
+  const newName = document.getElementById('input-rename').value.trim();
+  if (!newName) { showToast('Name darf nicht leer sein!', true); return; }
+  const proj = state.projekte.find(p => p.id === renameProjektId);
+  if (!proj) return;
+  proj.name = newName;
+  saveToStorage();
+  renderProjektSelect();
+  updateDataInfo();
+  renderManageProjektList();
+  closeRenameModalDirect();
+  showToast('Projekt umbenannt ✓');
 }
 
 // ============================================================
@@ -924,7 +1112,6 @@ function openMessungModal(msId) {
 
   document.getElementById('modal-ms-name').textContent = ms.name;
 
-  // Detail header
   document.getElementById('modal-ms-detail').innerHTML = `
     <div class="ms-detail-name">${ms.name}</div>
     <div class="ms-detail-grid">
@@ -935,7 +1122,6 @@ function openMessungModal(msId) {
     </div>
   `;
 
-  // Verlauf
   const myMessungen = state.messungen
     .filter(x => x.messstellen_id === msId && x.projekt_id === proj.id)
     .sort((a,b) => b.datum.localeCompare(a.datum));
@@ -1054,7 +1240,6 @@ function initMap() {
 
   map = L.map('map', { zoomControl: true }).setView([46.95, 7.45], 10);
 
-  // Swisstopo WMTS
   L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {
     attribution: '© swisstopo',
     maxZoom: 18,
@@ -1086,7 +1271,7 @@ function renderMapMarkers() {
     const hatHeute = state.messungen.some(x => x.messstellen_id === m.id && x.datum.startsWith(heute));
     const hatNeu = state.messungen.some(x => x.messstellen_id === m.id && x.neu);
 
-    const color = hatHeute ? '#3ddc84' : hatNeu ? '#00b4d8' : '#5a8a72';
+    const color = hatHeute ? '#515759' : hatNeu ? '#5D686E' : '#aaa';
     const icon = L.divIcon({
       html: `<div style="width:20px;height:20px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>`,
       className: '',
@@ -1096,7 +1281,7 @@ function renderMapMarkers() {
 
     const marker = L.marker([m.lat, m.lng], { icon })
       .addTo(map)
-      .bindPopup(`<b>${m.name}</b><br>OK Rohr: ${m.ok_rohr != null ? m.ok_rohr.toFixed(3)+' m' : '—'}<br><button onclick="window.openMessungModalFromMap('${m.id}')" style="margin-top:6px;padding:4px 10px;background:#3ddc84;border:none;border-radius:4px;cursor:pointer;font-weight:600">Messen</button>`);
+      .bindPopup(`<b>${m.name}</b><br>OK Rohr: ${m.ok_rohr != null ? m.ok_rohr.toFixed(3)+' m' : '—'}<br><button onclick="window.openMessungModalFromMap('${m.id}')" style="margin-top:6px;padding:4px 10px;background:#515759;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600">Messen</button>`);
 
     mapMarkers.push(marker);
     bounds.push([m.lat, m.lng]);
@@ -1125,8 +1310,6 @@ function importData(event) {
   reader.onload = (e) => {
     try {
       let text = e.target.result;
-
-      // Strip BOM if present
       if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
       text = text.trim();
 
@@ -1191,7 +1374,6 @@ function exportData() {
 
   downloadJSON(exportObj, `GW_${proj.name.replace(/\s+/g,'_')}_${today()}.json`);
 
-  // Mark as exported (not new)
   neueMessungen.forEach(m => m.neu = false);
   saveToStorage();
   renderMessstellen();
@@ -1290,9 +1472,6 @@ function showToast(msg, error = false) {
   setTimeout(() => { t.classList.remove('show'); }, 2500);
 }
 
-// ============================================================
-// SERVICE WORKER REGISTRATION
-// ============================================================
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }

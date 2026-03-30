@@ -1,0 +1,104 @@
+{
+  "projekt": {
+    "id": "proj_2025_thun",
+    "name": "Thun Grundwassernetz 2025",
+    "beschreibung": "Monitoring Grundwasser Raum Thun / Steffisburg, Kampagne 2025",
+    "erstellt": "2025-01-01",
+    "messstellen": [
+      {
+        "id": "TH-001",
+        "name": "Messstelle Thun Allmend",
+        "ok_rohr": 560.420,
+        "ueberstand": 0.200,
+        "lat": 46.7529,
+        "lng": 7.6280
+      },
+      {
+        "id": "TH-002",
+        "name": "Messstelle Steffisburg West",
+        "ok_rohr": 575.880,
+        "ueberstand": 0.175,
+        "lat": 46.7718,
+        "lng": 7.6195
+      },
+      {
+        "id": "TH-003",
+        "name": "Messstelle Uetendorf Nord",
+        "ok_rohr": 558.310,
+        "ueberstand": 0.230,
+        "lat": 46.7382,
+        "lng": 7.5990
+      },
+      {
+        "id": "TH-004",
+        "name": "Messstelle Gwatt",
+        "ok_rohr": 562.150,
+        "ueberstand": 0.195,
+        "lat": 46.7215,
+        "lng": 7.6410
+      },
+      {
+        "id": "TH-005",
+        "name": "Messstelle Thierachern",
+        "ok_rohr": 571.600,
+        "ueberstand": 0.260,
+        "lat": 46.7480,
+        "lng": 7.5780
+      },
+      {
+        "id": "TH-006",
+        "name": "Messstelle Hilterfingen",
+        "ok_rohr": 564.730,
+        "ueberstand": 0.185,
+        "lat": 46.7101,
+        "lng": 7.6620
+      }
+    ]
+  },
+  "messungen": [
+    {
+      "id": "th_hist_001",
+      "messstellen_id": "TH-001",
+      "projekt_id": "proj_2025_thun",
+      "datum": "2025-03-10T08:45",
+      "abstich": 3.120,
+      "messbar": true,
+      "bemerkung": "",
+      "neu": false,
+      "erfasst_am": "2025-03-10T08:46:00Z"
+    },
+    {
+      "id": "th_hist_002",
+      "messstellen_id": "TH-002",
+      "projekt_id": "proj_2025_thun",
+      "datum": "2025-03-10T09:30",
+      "abstich": 2.875,
+      "messbar": true,
+      "bemerkung": "Deckel leicht beschädigt, melden",
+      "neu": false,
+      "erfasst_am": "2025-03-10T09:31:00Z"
+    },
+    {
+      "id": "th_hist_003",
+      "messstellen_id": "TH-003",
+      "projekt_id": "proj_2025_thun",
+      "datum": "2025-03-10T10:10",
+      "abstich": null,
+      "messbar": false,
+      "bemerkung": "Rohr überflutet, Grundwasser über OK Rohr",
+      "neu": false,
+      "erfasst_am": "2025-03-10T10:11:00Z"
+    },
+    {
+      "id": "th_hist_004",
+      "messstellen_id": "TH-004",
+      "projekt_id": "proj_2025_thun",
+      "datum": "2025-03-10T11:00",
+      "abstich": 4.430,
+      "messbar": true,
+      "bemerkung": "",
+      "neu": false,
+      "erfasst_am": "2025-03-10T11:01:00Z"
+    }
+  ]
+}

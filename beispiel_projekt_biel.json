@@ -1,0 +1,145 @@
+{
+  "projekt": {
+    "id": "proj_2025_biel",
+    "name": "Biel Seeland Grundwasser 2025",
+    "beschreibung": "Grundwasser-Monitoring Raum Biel / Seeland, Kampagne 2025",
+    "erstellt": "2025-01-01",
+    "messstellen": [
+      {
+        "id": "BI-001",
+        "name": "Messstelle Biel Madretsch",
+        "ok_rohr": 436.890,
+        "ueberstand": 0.210,
+        "lat": 47.1485,
+        "lng": 7.2692
+      },
+      {
+        "id": "BI-002",
+        "name": "Messstelle Nidau Kanal",
+        "ok_rohr": 431.540,
+        "ueberstand": 0.165,
+        "lat": 47.1260,
+        "lng": 7.2440
+      },
+      {
+        "id": "BI-003",
+        "name": "Messstelle Port Brügg",
+        "ok_rohr": 433.110,
+        "ueberstand": 0.240,
+        "lat": 47.1158,
+        "lng": 7.2855
+      },
+      {
+        "id": "BI-004",
+        "name": "Messstelle Meinisberg",
+        "ok_rohr": 445.760,
+        "ueberstand": 0.195,
+        "lat": 47.1630,
+        "lng": 7.3120
+      },
+      {
+        "id": "BI-005",
+        "name": "Messstelle Scheuren",
+        "ok_rohr": 440.320,
+        "ueberstand": 0.220,
+        "lat": 47.1380,
+        "lng": 7.3350
+      },
+      {
+        "id": "BI-006",
+        "name": "Messstelle Orpund",
+        "ok_rohr": 438.950,
+        "ueberstand": 0.180,
+        "lat": 47.1528,
+        "lng": 7.3280
+      },
+      {
+        "id": "BI-007",
+        "name": "Messstelle Aegerten",
+        "ok_rohr": 434.200,
+        "ueberstand": 0.200,
+        "lat": 47.1085,
+        "lng": 7.3015
+      }
+    ]
+  },
+  "messungen": [
+    {
+      "id": "bi_hist_001",
+      "messstellen_id": "BI-001",
+      "projekt_id": "proj_2025_biel",
+      "datum": "2025-02-20T09:00",
+      "abstich": 5.210,
+      "messbar": true,
+      "bemerkung": "",
+      "neu": false,
+      "erfasst_am": "2025-02-20T09:01:00Z"
+    },
+    {
+      "id": "bi_hist_002",
+      "messstellen_id": "BI-002",
+      "projekt_id": "proj_2025_biel",
+      "datum": "2025-02-20T09:50",
+      "abstich": 3.945,
+      "messbar": true,
+      "bemerkung": "Wasserstand tiefer als Januar",
+      "neu": false,
+      "erfasst_am": "2025-02-20T09:51:00Z"
+    },
+    {
+      "id": "bi_hist_003",
+      "messstellen_id": "BI-003",
+      "projekt_id": "proj_2025_biel",
+      "datum": "2025-02-20T10:30",
+      "abstich": 4.680,
+      "messbar": true,
+      "bemerkung": "",
+      "neu": false,
+      "erfasst_am": "2025-02-20T10:31:00Z"
+    },
+    {
+      "id": "bi_hist_004",
+      "messstellen_id": "BI-004",
+      "projekt_id": "proj_2025_biel",
+      "datum": "2025-02-20T11:15",
+      "abstich": null,
+      "messbar": false,
+      "bemerkung": "Zugang versperrt, Baustelle nebenan",
+      "neu": false,
+      "erfasst_am": "2025-02-20T11:16:00Z"
+    },
+    {
+      "id": "bi_hist_005",
+      "messstellen_id": "BI-005",
+      "projekt_id": "proj_2025_biel",
+      "datum": "2025-02-20T12:00",
+      "abstich": 6.115,
+      "messbar": true,
+      "bemerkung": "",
+      "neu": false,
+      "erfasst_am": "2025-02-20T12:01:00Z"
+    },
+    {
+      "id": "bi_hist_006",
+      "messstellen_id": "BI-001",
+      "projekt_id": "proj_2025_biel",
+      "datum": "2025-03-20T08:55",
+      "abstich": 5.050,
+      "messbar": true,
+      "bemerkung": "Leichter Anstieg seit Februar",
+      "neu": false,
+      "erfasst_am": "2025-03-20T08:56:00Z"
+    },
+    {
+      "id": "bi_hist_007",
+      "messstellen_id": "BI-002",
+      "projekt_id": "proj_2025_biel",
+      "datum": "2025-03-20T09:45",
+      "abstich": 3.760,
+      "messbar": true,
+      "bemerkung": "",
+      "neu": false,
+      "erfasst_am": "2025-03-20T09:46:00Z"
+    }
+  ]
+}
