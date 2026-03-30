@@ -1116,45 +1116,61 @@ function importData(event) {
   if (!file) return;
 
   const reader = new FileReader();
+
+  reader.onerror = () => showToast('Datei konnte nicht gelesen werden!', true);
+
   reader.onload = (e) => {
     try {
-      const data = JSON.parse(e.target.result);
+      let text = e.target.result;
 
-      // Accept project format
-      if (data.projekt) {
-        const proj = data.projekt;
-        if (!proj.id) proj.id = 'proj_' + Date.now();
+      // Strip BOM if present
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      text = text.trim();
 
-        // Remove existing project with same id
-        state.projekte = state.projekte.filter(p => p.id !== proj.id);
-        state.projekte.push(proj);
-        state.aktivProjekt = proj.id;
-
-        // Import historical messungen if present (not flagged as new)
-        if (data.messungen) {
-          const existing = new Set(state.messungen.map(m => m.id));
-          data.messungen.forEach(m => {
-            if (!existing.has(m.id)) {
-              m.neu = false;
-              state.messungen.push(m);
-            }
-          });
-        }
-
-        saveToStorage();
-        renderProjektSelect();
-        renderMessstellen();
-        renderVerlauf();
-        updateDataInfo();
-        showToast(`Projekt "${proj.name}" importiert ✓`);
-      } else {
-        showToast('Ungültiges Format!', true);
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch(parseErr) {
+        showToast('Kein gültiges JSON: ' + parseErr.message, true);
+        return;
       }
+
+      if (!data.projekt) {
+        showToast('Feld "projekt" fehlt in der Datei!', true);
+        return;
+      }
+
+      const proj = data.projekt;
+      if (!proj.id) proj.id = 'proj_' + Date.now();
+      if (!proj.messstellen) proj.messstellen = [];
+
+      state.projekte = state.projekte.filter(p => p.id !== proj.id);
+      state.projekte.push(proj);
+      state.aktivProjekt = proj.id;
+
+      if (Array.isArray(data.messungen)) {
+        const existing = new Set(state.messungen.map(m => m.id));
+        data.messungen.forEach(m => {
+          if (!existing.has(m.id)) {
+            m.neu = false;
+            state.messungen.push(m);
+          }
+        });
+      }
+
+      saveToStorage();
+      renderProjektSelect();
+      renderMessstellen();
+      renderVerlauf();
+      updateDataInfo();
+      showToast(`Projekt "${proj.name}" importiert ✓`);
+
     } catch(e) {
-      showToast('Fehler beim Lesen der Datei!', true);
+      showToast('Fehler: ' + e.message, true);
     }
   };
-  reader.readAsText(file);
+
+  reader.readAsText(file, 'UTF-8');
   event.target.value = '';
 }
 
