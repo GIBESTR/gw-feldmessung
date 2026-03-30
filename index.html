@@ -51,7 +51,6 @@
     overflow: hidden;
   }
 
-
   /* HEADER */
   header {
     background: linear-gradient(135deg, #0d4f5c 0%, #1a7a8f 100%);
@@ -92,7 +91,14 @@
     font-family: var(--mono);
   }
 
-  .header-actions { display: flex; gap: 8px; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+  .version-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.05em;
+  }
 
   .icon-btn {
     width: 36px; height: 36px;
@@ -681,10 +687,11 @@
     <div class="logo">💧</div>
     <div>
       <div class="app-title">GW-FELDMESSUNG</div>
-      <div class="app-sub">Grundwasser Monitoring · v1.2.1</div>
+      <div class="app-sub">Grundwasser Monitoring</div>
     </div>
   </div>
   <div class="header-actions">
+    <span class="version-badge">v1.2.0</span>
     <button class="icon-btn" onclick="showView('view-daten')" title="Import/Export">⇅</button>
   </div>
 </header>
@@ -756,7 +763,6 @@
     </div>
 
     <div class="data-info" id="data-info">
-      <div class="data-info-row"><span>VERSION</span><span>v</span></div>
       <div class="data-info-row"><span>PROJEKT</span><span id="info-projekt">—</span></div>
       <div class="data-info-row"><span>MESSSTELLEN</span><span id="info-ms">0</span></div>
       <div class="data-info-row"><span>MESSUNGEN GESAMT</span><span id="info-total">0</span></div>
