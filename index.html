@@ -641,6 +641,36 @@
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* MODAL ACTION ROW (buttons at top) */
+  .modal-action-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .modal-action-row .btn {
+    flex: 1;
+    padding: 11px;
+    font-size: 14px;
+  }
+
+  /* INLINE FORM ROW */
+  .form-inline-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .form-inline-col { display: flex; flex-direction: column; }
+  .form-inline-col--date { flex: 2; min-width: 0; }
+  .form-inline-col--abstich { flex: 1.2; min-width: 0; }
+  .form-inline-col--messbar { flex: 0 0 auto; }
+
+  .toggle-compact {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+  }
 </style>
 </head>
 <body>
@@ -761,26 +791,32 @@
 
     <div class="ms-detail-header" id="modal-ms-detail"></div>
 
+    <div class="modal-action-row">
+      <button class="btn btn-secondary" onclick="closeModalDirect()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveMessung()">💾 Speichern</button>
+    </div>
+
     <div class="form-card">
-      <div class="form-row">
-        <label class="form-label">DATUM / UHRZEIT</label>
-        <input type="datetime-local" class="form-input" id="input-datetime">
-      </div>
-      <div class="form-row">
-        <label class="form-label">ABSTICH [m]</label>
-        <input type="number" step="0.001" placeholder="z.B. 3.456" class="form-input" id="input-abstich">
-      </div>
-      <div class="form-row">
-        <label class="form-label">MESSBAR</label>
-        <div class="toggle-row">
-          <span class="toggle-label">Grundwasser messbar</span>
-          <label class="toggle">
-            <input type="checkbox" id="input-messbar" checked>
-            <span class="toggle-slider"></span>
-          </label>
+      <div class="form-inline-row">
+        <div class="form-inline-col form-inline-col--date">
+          <label class="form-label">DATUM / UHRZEIT</label>
+          <input type="datetime-local" class="form-input" id="input-datetime">
+        </div>
+        <div class="form-inline-col form-inline-col--abstich">
+          <label class="form-label">ABSTICH [m]</label>
+          <input type="number" step="0.001" placeholder="3.456" class="form-input" id="input-abstich">
+        </div>
+        <div class="form-inline-col form-inline-col--messbar">
+          <label class="form-label">MESSBAR</label>
+          <div class="toggle-compact">
+            <label class="toggle">
+              <input type="checkbox" id="input-messbar" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
       </div>
-      <div class="form-row">
+      <div class="form-row" style="margin-top:12px;margin-bottom:0">
         <label class="form-label">BEMERKUNG</label>
         <textarea class="form-textarea" id="input-bemerkung" placeholder="Optionale Bemerkung…"></textarea>
       </div>
@@ -788,9 +824,6 @@
 
     <div class="section-title" style="margin-bottom:8px">BISHERIGE MESSUNGEN</div>
     <div id="modal-verlauf" style="margin-bottom:16px"></div>
-
-    <button class="btn btn-primary" onclick="saveMessung()">💾  Messung speichern</button>
-    <button class="btn btn-secondary" style="margin-top:8px" onclick="closeModalDirect()">Abbrechen</button>
   </div>
 </div>
 
