@@ -691,7 +691,7 @@
     </div>
   </div>
   <div class="header-actions">
-    <span class="version-badge">v1.2.0</span>
+    <span class="version-badge">v1.3.0</span>
     <button class="icon-btn" onclick="showView('view-daten')" title="Import/Export">⇅</button>
   </div>
 </header>
@@ -774,6 +774,56 @@
       <button class="btn btn-danger" onclick="clearData()">🗑  Alle Daten löschen</button>
     </div>
   </div>
+  <!-- SERVER SYNC VIEW -->
+  <div class="view" id="view-server">
+
+    <!-- Einstellungen -->
+    <div class="section-title">SERVER-EINSTELLUNGEN</div>
+    <div class="form-card" style="margin-bottom:12px">
+      <div class="form-row">
+        <label class="form-label">SERVER-URL</label>
+        <input type="url" class="form-input" id="server-url"
+          placeholder="https://gwapp.geo-online.com"
+          oninput="serverEinstellungenSpeichern()">
+      </div>
+      <div class="form-row" style="margin-top:8px">
+        <label class="form-label">TOKEN</label>
+        <input type="text" class="form-input" id="server-token"
+          placeholder="Token aus PWA-Sync Seite"
+          oninput="serverEinstellungenSpeichern()">
+      </div>
+      <div class="form-row" style="margin-top:8px">
+        <button class="btn btn-secondary" onclick="serverVerbindungTesten()">🔌 Verbindung testen</button>
+      </div>
+      <div id="server-status" style="display:none;margin-top:8px;font-size:11px;
+        font-family:var(--mono);padding:6px 10px;border-radius:3px"></div>
+    </div>
+
+    <!-- Verfügbare Projekte -->
+    <div class="section-title">VERFÜGBARE PROJEKTE VOM SERVER</div>
+    <div id="server-projekte-liste">
+      <div class="empty-state">
+        <div class="empty-icon">☁</div>
+        <p>Server-Einstellungen eingeben und<br>«Projekte laden» antippen.</p>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px"
+      onclick="serverProjekteLaden()">⟳ Projekte laden</button>
+
+    <!-- Sync: neue Messungen hochladen -->
+    <div class="section-title" style="margin-top:20px">MESSUNGEN HOCHLADEN</div>
+    <div class="form-card">
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);
+        line-height:1.6;margin-bottom:10px">
+        Neue Messungen (markiert mit NEU) des aktiven Projekts zum Server hochladen.
+      </div>
+      <button class="btn btn-primary" onclick="serverSyncHochladen()">⬆ Neue Messungen senden</button>
+      <div id="sync-status" style="display:none;margin-top:8px;font-size:11px;
+        font-family:var(--mono);padding:6px 10px;border-radius:3px"></div>
+    </div>
+
+  </div>
+
 </main>
 
 <nav>
@@ -788,6 +838,9 @@
   </button>
   <button class="tab-btn" onclick="showView('view-daten')" data-view="view-daten">
     <span class="tab-icon">⇅</span>Daten
+  </button>
+  <button class="tab-btn" onclick="showView('view-server')" data-view="view-server">
+    <span class="tab-icon">☁</span>Server
   </button>
 </nav>
 
@@ -887,6 +940,10 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('online', updateOnlineBadge);
   window.addEventListener('offline', updateOnlineBadge);
   setNow();
+  serverEinstellungenLaden();
+  // Versionscheck wenn online
+  window.addEventListener('online', () => serverVersionCheck());
+  if (navigator.onLine) setTimeout(serverVersionCheck, 3000);
 });
 
 function setNow() {
@@ -1511,6 +1568,214 @@ function showToast(msg, error = false) {
   t.textContent = msg;
   t.className = 'toast' + (error ? ' error' : '') + ' show';
   setTimeout(() => { t.classList.remove('show'); }, 2500);
+}
+
+// ============================================================
+// SERVER SYNC
+// ============================================================
+
+function serverEinstellungenLaden() {
+  const url   = localStorage.getItem('gw_server_url')   || '';
+  const token = localStorage.getItem('gw_server_token') || '';
+  const urlEl   = document.getElementById('server-url');
+  const tokenEl = document.getElementById('server-token');
+  if (urlEl)   urlEl.value   = url;
+  if (tokenEl) tokenEl.value = token;
+}
+
+function serverEinstellungenSpeichern() {
+  const url   = document.getElementById('server-url')?.value.trim()   || '';
+  const token = document.getElementById('server-token')?.value.trim() || '';
+  localStorage.setItem('gw_server_url',   url);
+  localStorage.setItem('gw_server_token', token);
+}
+
+function serverStatusAnzeigen(elId, msg, ok) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.style.display = '';
+  el.style.background = ok ? 'rgba(0,180,204,0.1)' : 'rgba(192,57,43,0.1)';
+  el.style.color      = ok ? 'var(--accent2)'       : 'var(--danger)';
+  el.style.border     = ok ? '1px solid rgba(0,180,204,0.3)' : '1px solid rgba(192,57,43,0.3)';
+  el.textContent = msg;
+}
+
+async function serverVerbindungTesten() {
+  const url   = document.getElementById('server-url')?.value.trim();
+  const token = document.getElementById('server-token')?.value.trim();
+  if (!url || !token) {
+    serverStatusAnzeigen('server-status', '⚠ URL und Token eingeben', false);
+    return;
+  }
+  serverStatusAnzeigen('server-status', '… verbinde', true);
+  try {
+    const r = await fetch(`${url}/api/pwa/status?token=${encodeURIComponent(token)}`);
+    const d = await r.json();
+    if (d.ok) {
+      serverStatusAnzeigen('server-status', `✓ Verbunden — ${d.server} ${d.version}`, true);
+    } else {
+      serverStatusAnzeigen('server-status', `⚠ ${d.fehler || 'Ungültiger Token'}`, false);
+    }
+  } catch(e) {
+    serverStatusAnzeigen('server-status', `⚠ Nicht erreichbar: ${e.message}`, false);
+  }
+}
+
+async function serverProjekteLaden() {
+  const url   = localStorage.getItem('gw_server_url')   || '';
+  const token = localStorage.getItem('gw_server_token') || '';
+  const liste = document.getElementById('server-projekte-liste');
+  if (!url || !token) {
+    liste.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠</div><p>Server-URL und Token eingeben.</p></div>';
+    return;
+  }
+  liste.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Lade Projekte…</p></div>';
+  try {
+    const r = await fetch(`${url}/api/pwa/projekte?token=${encodeURIComponent(token)}`);
+    const projekte = await r.json();
+    if (!Array.isArray(projekte) || projekte.length === 0) {
+      liste.innerHTML = '<div class="empty-state"><div class="empty-icon">📂</div><p>Keine freigegebenen Projekte auf dem Server.</p></div>';
+      return;
+    }
+    liste.innerHTML = '';
+    projekte.forEach(p => {
+      const bereitsGeladen = state.projekte.some(lp => lp.server_id === p.id);
+      const card = document.createElement('div');
+      card.className = 'ms-card';
+      card.style.marginBottom = '8px';
+      const exportDatum = p.pwa_export_datum
+        ? new Date(p.pwa_export_datum).toLocaleDateString('de-CH')
+        : '—';
+      card.innerHTML = `
+        <div class="ms-icon">📋</div>
+        <div class="ms-info">
+          <div class="ms-name">${p.name}</div>
+          <div class="ms-meta">${p.mst_count || 0} Messstellen · Stand: ${exportDatum}</div>
+        </div>
+        <button class="btn ${bereitsGeladen ? 'btn-secondary' : 'btn-primary'}"
+          style="font-size:11px;padding:6px 12px;flex-shrink:0"
+          onclick="serverProjektImportieren(${p.id}, '${encodeURIComponent(p.name)}')">
+          ${bereitsGeladen ? '⟳ Aktualisieren' : '⬇ Importieren'}
+        </button>`;
+      liste.appendChild(card);
+    });
+  } catch(e) {
+    liste.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><p>Fehler: ${e.message}</p></div>`;
+  }
+}
+
+async function serverProjektImportieren(serverId, encodedName) {
+  const url   = localStorage.getItem('gw_server_url')   || '';
+  const token = localStorage.getItem('gw_server_token') || '';
+  const name  = decodeURIComponent(encodedName);
+  try {
+    const r = await fetch(`${url}/api/pwa/projekte/${serverId}?token=${encodeURIComponent(token)}`);
+    const data = await r.json();
+    if (!data.projekt) {
+      showToast('Fehler beim Laden', true);
+      return;
+    }
+    // server_id im Projekt speichern für späteres Update
+    data.projekt.server_id = serverId;
+
+    // Bestehendes Projekt mit gleicher server_id ersetzen
+    state.projekte = state.projekte.filter(p => p.server_id !== serverId);
+    state.projekte.push(data.projekt);
+    state.aktivProjekt = data.projekt.id;
+    saveToStorage();
+    renderProjektSelect();
+    renderMessstellen();
+    updateDataInfo();
+    showToast(`«${name}» importiert ✓`);
+    // Liste aktualisieren
+    await serverProjekteLaden();
+  } catch(e) {
+    showToast('Fehler: ' + e.message, true);
+  }
+}
+
+async function serverSyncHochladen() {
+  const url   = localStorage.getItem('gw_server_url')   || '';
+  const token = localStorage.getItem('gw_server_token') || '';
+  const proj  = getAktiveProjekt();
+
+  if (!url || !token) {
+    serverStatusAnzeigen('sync-status', '⚠ Server-Einstellungen fehlen', false);
+    return;
+  }
+  if (!proj) {
+    serverStatusAnzeigen('sync-status', '⚠ Kein aktives Projekt', false);
+    return;
+  }
+  if (!proj.server_id) {
+    serverStatusAnzeigen('sync-status', '⚠ Projekt nicht vom Server — Sync nicht möglich', false);
+    return;
+  }
+
+  const neueMessungen = state.messungen.filter(
+    m => m.projekt_id === proj.id && m.neu);
+
+  if (neueMessungen.length === 0) {
+    serverStatusAnzeigen('sync-status', '✓ Keine neuen Messungen', true);
+    return;
+  }
+
+  serverStatusAnzeigen('sync-status', `… sende ${neueMessungen.length} Messungen`, true);
+
+  try {
+    const r = await fetch(
+      `${url}/api/pwa/projekte/${proj.server_id}/sync?token=${encodeURIComponent(token)}`,
+      {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          messungen: neueMessungen,
+          geraet: navigator.userAgent.slice(0, 50)
+        })
+      }
+    );
+    const res = await r.json();
+    if (res.ok) {
+      // Messungen als synchronisiert markieren
+      neueMessungen.forEach(m => { m.neu = false; });
+      saveToStorage();
+      renderMessstellen();
+      updateDataInfo();
+      let msg = `✓ ${res.importiert} Messungen gesendet`;
+      if (res.konflikte?.length) msg += ` · ${res.konflikte.length} Konflikte`;
+      if (res.fehler?.length)    msg += ` · ${res.fehler.length} Fehler`;
+      serverStatusAnzeigen('sync-status', msg, true);
+    } else {
+      serverStatusAnzeigen('sync-status', `⚠ ${res.fehler || 'Fehler'}`, false);
+    }
+  } catch(e) {
+    serverStatusAnzeigen('sync-status', `⚠ ${e.message}`, false);
+  }
+}
+
+async function serverVersionCheck() {
+  // Beim Start: prüfen ob Server-Version neuer ist
+  const url   = localStorage.getItem('gw_server_url')   || '';
+  const token = localStorage.getItem('gw_server_token') || '';
+  if (!url || !token) return;
+
+  for (const proj of state.projekte) {
+    if (!proj.server_id) continue;
+    try {
+      const r = await fetch(
+        `${url}/api/pwa/projekte/${proj.server_id}/version?token=${encodeURIComponent(token)}`);
+      const v = await r.json();
+      if (!v.export_datum) continue;
+      const serverDt = new Date(v.export_datum).getTime();
+      const lokalDt  = proj.export_datum ? new Date(proj.export_datum).getTime() : 0;
+      if (serverDt > lokalDt) {
+        // Neuere Version verfügbar — Benutzer fragen
+        if (confirm(`Projekt «${proj.name}» hat eine neuere Version auf dem Server.\n\nJetzt aktualisieren?`)) {
+          await serverProjektImportieren(proj.server_id, encodeURIComponent(proj.name));
+        }
+      }
+    } catch(e) { /* offline — ignorieren */ }
+  }
 }
 
 if ('serviceWorker' in navigator) {

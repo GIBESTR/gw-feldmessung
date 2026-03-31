@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gw-feldmessung-v1.2.1';
+const CACHE_NAME = 'gw-feldmessung-v1.3.0';
 
 const ASSETS = [
   './',
